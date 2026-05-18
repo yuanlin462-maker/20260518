@@ -6,6 +6,7 @@ let computerGesture = "";
 let gameResult = "";
 let resultLocked = false;
 let cameraStarted = false;
+let gameStarted = false;
 
 function setup() {
   // 建立全螢幕畫布
@@ -54,8 +55,18 @@ function draw() {
   // 設定背景顏色為 #FF77FF (亮粉色)
   background('#FF77FF');
 
+  // 1. 若遊戲尚未開始，只顯示開始按鈕文字，不執行後續邏輯
+  if (!gameStarted) {
+    fill(255);
+    noStroke();
+    textAlign(CENTER, CENTER);
+    textSize(60);
+    text("按一下開始遊戲", width / 2, height / 2);
+    return; // 跳出 draw，不顯示畫面
+  }
+
   // 處理倒數計時邏輯 (每秒執行一次)
-  if (cameraStarted && !resultLocked) {
+  if (!resultLocked) {
     let elapsed = millis() - lastTimestamp;
     if (elapsed > 1000) {
       gameTimer--;
@@ -63,7 +74,10 @@ function draw() {
       if (gameTimer <= 0) {
         computerGesture = random(["石頭 ✊", "剪刀 ✌️", "布 🖐️"]);
         resultLocked = true; // 倒數結束，鎖定結果
-        gameResult = judgeWinner(currentGesture, computerGesture);
+        // 只有在攝影機準備好時才判定勝負
+        if (cameraStarted) {
+          gameResult = judgeWinner(currentGesture, computerGesture);
+        }
       }
     }
   }
@@ -176,7 +190,11 @@ function drawUI() {
 
 // 點擊畫面重置遊戲
 function mousePressed() {
-  if (resultLocked) {
+  if (!gameStarted && cameraStarted) {
+    gameStarted = true;
+    gameTimer = 3;
+    lastTimestamp = millis();
+  } else if (resultLocked) {
     gameTimer = 3;
     resultLocked = false;
     gameResult = "";
