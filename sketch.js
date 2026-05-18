@@ -64,14 +64,22 @@ function draw() {
     
     if (detections.multiHandLandmarks) {
       for (const landmarks of detections.multiHandLandmarks) {
-        // 因為使用了縮放後的 context，必須手動將標記點座標轉換到 dw, dh 的大小
-        const scaledLandmarks = landmarks.map(l => ({
-          x: l.x * dw,
-          y: l.y * dh,
-          z: l.z
-        }));
-        drawConnectors(drawingContext, scaledLandmarks, HAND_CONNECTIONS, {color: '#00FF00', lineWidth: 3});
-        drawLandmarks(drawingContext, scaledLandmarks, {color: '#FF0000', lineWidth: 1});
+        // 1. 繪製骨架連接線 (使用綠色)
+        stroke(0, 255, 0); 
+        strokeWeight(3);
+        for (const connection of HAND_CONNECTIONS) {
+          let from = landmarks[connection[0]];
+          let to = landmarks[connection[1]];
+          // 將歸一化座標轉換為影像區域內的像素座標
+          line(from.x * dw, from.y * dh, to.x * dw, to.y * dh);
+        }
+
+        // 2. 繪製指尖與關節點 (使用紅色點)
+        noStroke();
+        fill(255, 0, 0);
+        for (const pt of landmarks) {
+          circle(pt.x * dw, pt.y * dh, 7);
+        }
       }
     }
     pop();
