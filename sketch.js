@@ -126,12 +126,27 @@ function draw() {
     fill(255);
     noStroke();
     textAlign(CENTER);
-    textSize(24);
+    textSize(20);
     text("正在初始化攝影機...", width / 2, height / 2);
   }
 
   // 4. 顯示遊戲 UI
   drawUI();
+}
+
+// 顯示初始啟動畫面
+function drawStartScreen() {
+  noStroke();
+  textAlign(CENTER, CENTER);
+  if (cameraStarted) {
+    fill(0, 180, 0); // 綠色
+    textSize(50); // 縮小一號 (原 60)
+    text("按一下開始遊戲", width / 2, height / 2);
+  } else {
+    fill(0);
+    textSize(24); // 縮小一號 (原 30)
+    text("正在初始化攝影機與 AI 模型...", width / 2, height / 2);
+  }
 }
 
 // 解析目前手勢的邏輯
@@ -179,7 +194,7 @@ function drawUI() {
   push();
   textAlign(LEFT, TOP);
   fill(0);
-  textSize(24);
+  textSize(20); // 縮小一號 (原 24)
   text(`玩家: ${playerScore}  |  電腦: ${computerScore}`, 30, 30);
   pop();
 
@@ -187,7 +202,7 @@ function drawUI() {
   push();
   textAlign(RIGHT, TOP);
   fill(0);
-  textSize(24);
+  textSize(20); // 縮小一號 (原 24)
   if (resultLocked) {
     text("您出的是: " + currentGesture, width - 40, 40);
     text("電腦出的是: " + computerGesture, width - 40, 80);
@@ -201,7 +216,7 @@ function drawUI() {
   // 畫面中央的倒數與提示
   if (gameStarted && !resultLocked) {
     fill(255);
-    textSize(150);
+    textSize(120); // 縮小一號 (原 150)
     let timerText = "";
     if (gameTimer === 3) timerText = "剪刀✌";
     else if (gameTimer === 2) timerText = "石頭✊";
@@ -210,7 +225,7 @@ function drawUI() {
     text(timerText, width / 2, height / 2);
   } else {
     fill(255);
-    textSize(30);
+    textSize(24); // 縮小一號 (原 30)
     text("點擊畫面重新開始", width / 2, height * 0.9);
   }
   pop();
