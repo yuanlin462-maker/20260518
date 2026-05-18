@@ -63,8 +63,8 @@ function draw() {
   }
 
   if (detections && detections.image) {
-    // 1. 解析手勢 (若有偵測到手)
-    analyzeGesture();
+    // 1. 解析手勢 (只在倒數期間解析，一旦鎖定就不再更新，達到「不能動」的效果)
+    if (!resultLocked) analyzeGesture();
 
     // 2. 繪製攝影機影像 (居中 50%)
     let dw = width * 0.5;
@@ -137,12 +137,13 @@ function drawUI() {
   push();
   textAlign(CENTER, CENTER);
   
-  // 在右上角顯示即時偵測狀態，方便玩家調整手勢
+  // 在右上角顯示狀態：倒數時顯示「準備中」，結束後顯示「最終結果」
   push();
   textAlign(RIGHT, TOP);
   fill(0);
   textSize(30);
-  text("您出的是: " + currentGesture, width - 20, 20);
+  let statusText = resultLocked ? currentGesture : "準備中...";
+  text("您出的是: " + statusText, width - 20, 20);
   pop();
 
   // 顯示倒數或結果
@@ -154,13 +155,7 @@ function drawUI() {
     textSize(32);
     text("請準備手勢...", width / 2, height * 0.25);
   } else {
-    fill(0);
-    textSize(50);
-    text("您出的是：", width / 2, height * 0.15);
-    fill(255, 0, 0);
-    textSize(100);
-    text(currentGesture, width / 2, height * 0.3);
-    
+    // 移除中央的 "您出的是：" 大字，只保留重新開始提示
     // 重新開始提示
     fill(255);
     textSize(20);
