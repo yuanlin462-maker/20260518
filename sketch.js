@@ -142,20 +142,19 @@ function drawUI() {
   textAlign(RIGHT, TOP);
   fill(0);
   textSize(30);
-  let statusText = resultLocked ? currentGesture : "準備中...";
-  text("您出的是: " + statusText, width - 20, 20);
+  if (resultLocked) {
+    text("您出的是: " + currentGesture, width - 20, 20);
+  } else {
+    text("您出的是: 準備中...", width - 20, 20);
+  }
   pop();
 
-  // 顯示倒數或結果
+  // 顯示倒數或重新開始提示
   if (!resultLocked) {
     fill(255);
-    textSize(80);
-    text(gameTimer > 0 ? gameTimer : "出拳！", width / 2, height * 0.15);
-    
-    textSize(32);
-    text("請準備手勢...", width / 2, height * 0.25);
+    textSize(120);
+    text(gameTimer, width / 2, height / 2);
   } else {
-    // 移除中央的 "您出的是：" 大字，只保留重新開始提示
     // 重新開始提示
     fill(255);
     textSize(20);
