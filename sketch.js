@@ -133,6 +133,14 @@ function drawUI() {
   push();
   textAlign(CENTER, CENTER);
   
+  // 在左上角顯示即時偵測狀態，方便玩家調整手勢
+  push();
+  textAlign(LEFT, TOP);
+  fill(0);
+  textSize(30);
+  text("您出的是: " + currentGesture, 20, 20);
+  pop();
+
   // 顯示倒數或結果
   if (!resultLocked) {
     fill(255);
