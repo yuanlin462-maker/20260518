@@ -1,7 +1,7 @@
 let detections;
 let gameTimer = 3;
 let lastTimestamp = 0;
-let currentGesture = "等待中...";
+let currentGesture = "未偵測到手勢";
 let resultLocked = false;
 
 function setup() {
@@ -63,37 +63,18 @@ function draw() {
   }
 
   if (detections && detections.image) {
-    // 解析手勢
-    if (detections.multiHandLandmarks && detections.multiHandLandmarks.length > 0) {
-      const landmarks = detections.multiHandLandmarks[0];
-      
-      // 判斷手指是否伸直 (y 座標越小代表越高)
-      let isIndexUp = landmarks[8].y < landmarks[6].y;
-      let isMiddleUp = landmarks[12].y < landmarks[10].y;
-      let isRingUp = landmarks[16].y < landmarks[14].y;
-      let isPinkyUp = landmarks[20].y < landmarks[18].y;
-      let isThumbUp = landmarks[4].x > landmarks[3].x; // 姆指通常判斷 x 軸(鏡像後)
+    // 1. 解析手勢 (若有偵測到手)
+    analyzeGesture();
 
-      let upCount = [isIndexUp, isMiddleUp, isRingUp, isPinkyUp].filter(v => v).length;
-
-      if (upCount === 0) currentGesture = "石頭 ✊";
-      else if (upCount === 2 && isIndexUp && isMiddleUp) currentGesture = "剪刀 ✌️";
-      else if (upCount >= 3) currentGesture = "布 🖐️";
-    }
-
-    // 計算 50% 的影像寬高
+    // 2. 繪製攝影機影像 (居中 50%)
     let dw = width * 0.5;
     let dh = height * 0.5;
-    // 計算置中座標
     let dx = (width - dw) / 2;
     let dy = (height - dh) / 2;
 
     push();
-    // 移動到影像框的右上角準備進行水平翻轉 (鏡像)
     translate(dx + dw, dy);
     scale(-1, 1);
-
-    // 繪製攝影機影像，大小調整為寬高的 50%
     drawingContext.drawImage(detections.image, 0, 0, dw, dh);
     
     if (detections.multiHandLandmarks) {
@@ -117,15 +98,38 @@ function draw() {
       }
     }
     pop();
-
-    // 顯示遊戲 UI
-    drawUI();
   } else {
+    // 攝影機尚未就緒時的提示
     fill(255);
     noStroke();
     textAlign(CENTER);
     textSize(24);
     text("正在初始化攝影機...", width / 2, height / 2);
+  }
+
+  // 3. 顯示遊戲 UI (移到最外層，確保隨時可見)
+  drawUI();
+}
+
+function analyzeGesture() {
+  if (detections.multiHandLandmarks && detections.multiHandLandmarks.length > 0) {
+    const landmarks = detections.multiHandLandmarks[0];
+    
+    // 判斷手指是否伸直 (y 座標越小代表越高)
+    let isIndexUp = landmarks[8].y < landmarks[6].y;
+    let isMiddleUp = landmarks[12].y < landmarks[10].y;
+    let isRingUp = landmarks[16].y < landmarks[14].y;
+    let isPinkyUp = landmarks[20].y < landmarks[18].y;
+
+    // 計算伸直的手指數量
+    let upCount = [isIndexUp, isMiddleUp, isRingUp, isPinkyUp].filter(v => v).length;
+
+    if (upCount === 0) currentGesture = "石頭 ✊";
+    else if (upCount === 2 && isIndexUp && isMiddleUp) currentGesture = "剪刀 ✌️";
+    else if (upCount >= 3) currentGesture = "布 🖐️";
+    else currentGesture = "偵測中...";
+  } else {
+    currentGesture = "未偵測到手勢";
   }
 }
 
@@ -133,12 +137,12 @@ function drawUI() {
   push();
   textAlign(CENTER, CENTER);
   
-  // 在左上角顯示即時偵測狀態，方便玩家調整手勢
+  // 在右上角顯示即時偵測狀態，方便玩家調整手勢
   push();
-  textAlign(LEFT, TOP);
+  textAlign(RIGHT, TOP);
   fill(0);
   textSize(30);
-  text("您出的是: " + currentGesture, 20, 20);
+  text("您出的是: " + currentGesture, width - 20, 20);
   pop();
 
   // 顯示倒數或結果
