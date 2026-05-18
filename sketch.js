@@ -43,8 +43,8 @@ function onResults(results) {
 }
 
 function draw() {
-  // 設定背景顏色為 e7c6ff
-  background('#e7c6ff');
+  // 設定背景顏色為 #FF77FF
+  background('#FF77FF');
 
   if (detections && detections.image) {
     // 計算 50% 的影像寬高
@@ -84,6 +84,8 @@ function draw() {
     }
     pop();
   } else {
+    fill(255);
+    noStroke();
     textAlign(CENTER);
     text("正在初始化攝影機...", width / 2, height / 2);
   }
