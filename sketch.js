@@ -1,7 +1,7 @@
 let detections;
 let gameTimer = 3;
-let lastTimestamp = 0;
-let currentGesture = "未偵測到手勢";
+let lastTimestamp = 0; 
+let currentGesture = "等待中...";
 let resultLocked = false;
 
 function setup() {
@@ -35,6 +35,7 @@ function setup() {
     height: 480
   });
   camera.start();
+  lastTimestamp = millis(); // 初始化計時器
 }
 
 // 當視窗大小改變時，自動調整畫布大小
@@ -51,35 +52,33 @@ function draw() {
   background('#FF77FF');
 
   // 處理倒數計時邏輯 (每秒執行一次)
-  if (!resultLocked) {
-    if (millis() - lastTimestamp > 1000) {
-      if (gameTimer > 0) {
-        gameTimer--;
-      } else {
-        resultLocked = true; // 時間到，鎖定結果
-      }
-      lastTimestamp = millis();
+  let elapsed = millis() - lastTimestamp;
+  if (!resultLocked && elapsed > 1000) {
+    gameTimer--;
+    lastTimestamp = millis();
+    if (gameTimer <= 0) {
+      resultLocked = true; // 倒數結束，鎖定結果
     }
   }
 
   if (detections && detections.image) {
-    // 1. 解析手勢 (只在倒數期間解析，一旦鎖定就不再更新，達到「不能動」的效果)
+    // 1. 解析手勢：只在倒數期間更新 currentGesture
     if (!resultLocked) analyzeGesture();
 
     // 2. 繪製攝影機影像 (居中 50%)
     let dw = width * 0.5;
     let dh = height * 0.5;
-    let dx = (width - dw) / 2;
-    let dy = (height - dh) / 2;
+    let dx = (width - dw) / 2; // 置中位置
+    let dy = (height - dh) / 2; // 置中位置
 
     push();
     translate(dx + dw, dy);
-    scale(-1, 1);
+    scale(-1, 1); // 鏡像處理
     drawingContext.drawImage(detections.image, 0, 0, dw, dh);
     
-    if (detections.multiHandLandmarks) {
+    // 3. 繪製骨架 (如果你希望偵測完後骨架也消失，可以加上 if(!resultLocked) 判斷)
+    if (detections.multiHandLandmarks && !resultLocked) {
       for (const landmarks of detections.multiHandLandmarks) {
-        // 1. 繪製骨架連接線 (使用綠色)
         stroke(0, 255, 0); 
         strokeWeight(3);
         for (const connection of HAND_CONNECTIONS) {
@@ -89,7 +88,6 @@ function draw() {
           line(from.x * dw, from.y * dh, to.x * dw, to.y * dh);
         }
 
-        // 2. 繪製指尖與關節點 (使用紅色點)
         noStroke();
         fill(255, 0, 0);
         for (const pt of landmarks) {
@@ -111,17 +109,16 @@ function draw() {
   drawUI();
 }
 
+// 解析目前手勢的邏輯
 function analyzeGesture() {
   if (detections.multiHandLandmarks && detections.multiHandLandmarks.length > 0) {
     const landmarks = detections.multiHandLandmarks[0];
     
-    // 判斷手指是否伸直 (y 座標越小代表越高)
     let isIndexUp = landmarks[8].y < landmarks[6].y;
     let isMiddleUp = landmarks[12].y < landmarks[10].y;
     let isRingUp = landmarks[16].y < landmarks[14].y;
     let isPinkyUp = landmarks[20].y < landmarks[18].y;
 
-    // 計算伸直的手指數量
     let upCount = [isIndexUp, isMiddleUp, isRingUp, isPinkyUp].filter(v => v).length;
 
     if (upCount === 0) currentGesture = "石頭 ✊";
@@ -129,35 +126,35 @@ function analyzeGesture() {
     else if (upCount >= 3) currentGesture = "布 🖐️";
     else currentGesture = "偵測中...";
   } else {
-    currentGesture = "未偵測到手勢";
+    currentGesture = "未偵測到手";
   }
 }
 
+// 繪製使用者介面
 function drawUI() {
   push();
   textAlign(CENTER, CENTER);
   
-  // 在右上角顯示狀態：倒數時顯示「準備中」，結束後顯示「最終結果」
+  // 右上角顯示：倒數時顯示「準備中」，結束後顯示「最終結果」
   push();
   textAlign(RIGHT, TOP);
   fill(0);
   textSize(30);
   if (resultLocked) {
-    text("您出的是: " + currentGesture, width - 20, 20);
+    text("您出的是: " + currentGesture, width - 30, 30);
   } else {
-    text("您出的是: 準備中...", width - 20, 20);
+    text("您出的是: 準備中...", width - 30, 30);
   }
   pop();
 
-  // 顯示倒數或重新開始提示
+  // 畫面中央的倒數與提示
   if (!resultLocked) {
     fill(255);
-    textSize(120);
-    text(gameTimer, width / 2, height / 2);
+    textSize(150);
+    text(gameTimer > 0 ? gameTimer : "", width / 2, height / 2);
   } else {
-    // 重新開始提示
     fill(255);
-    textSize(20);
+    textSize(30);
     text("點擊畫面重新開始", width / 2, height * 0.9);
   }
   pop();
