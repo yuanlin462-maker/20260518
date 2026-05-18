@@ -1,8 +1,8 @@
 let detections;
 
 function setup() {
-  // 配合常見的攝影機比例
-  createCanvas(640, 480);
+  // 建立全螢幕畫布
+  createCanvas(windowWidth, windowHeight);
 
   const videoElement = document.getElementById('input_video');
 
@@ -33,31 +33,49 @@ function setup() {
   camera.start();
 }
 
+// 當視窗大小改變時，自動調整畫布大小
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}
+
 function onResults(results) {
   detections = results;
 }
 
 function draw() {
-  // 繪製攝影機內容
+  // 設定背景顏色為 e7c6ff
+  background('#e7c6ff');
+
   if (detections && detections.image) {
-    // 水平翻轉影像讓操作更直覺 (鏡像)
+    // 計算 50% 的影像寬高
+    let dw = width * 0.5;
+    let dh = height * 0.5;
+    // 計算置中座標
+    let dx = (width - dw) / 2;
+    let dy = (height - dh) / 2;
+
     push();
-    translate(width, 0);
+    // 移動到影像框的右上角準備進行水平翻轉 (鏡像)
+    translate(dx + dw, dy);
     scale(-1, 1);
-    drawingContext.drawImage(detections.image, 0, 0, width, height);
+
+    // 繪製攝影機影像，大小調整為寬高的 50%
+    drawingContext.drawImage(detections.image, 0, 0, dw, dh);
     
-    // 繪製手部關節
     if (detections.multiHandLandmarks) {
       for (const landmarks of detections.multiHandLandmarks) {
-        drawConnectors(drawingContext, landmarks, HAND_CONNECTIONS,
-                       {color: '#00FF00', lineWidth: 5});
-        drawLandmarks(drawingContext, landmarks,
-                      {color: '#FF0000', lineWidth: 2});
+        // 因為使用了縮放後的 context，必須手動將標記點座標轉換到 dw, dh 的大小
+        const scaledLandmarks = landmarks.map(l => ({
+          x: l.x * dw,
+          y: l.y * dh,
+          z: l.z
+        }));
+        drawConnectors(drawingContext, scaledLandmarks, HAND_CONNECTIONS, {color: '#00FF00', lineWidth: 3});
+        drawLandmarks(drawingContext, scaledLandmarks, {color: '#FF0000', lineWidth: 1});
       }
     }
     pop();
   } else {
-    background(220);
     textAlign(CENTER);
     text("正在初始化攝影機...", width / 2, height / 2);
   }
