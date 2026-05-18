@@ -1,9 +1,11 @@
 let detections;
 let gameTimer = 3;
-let lastTimestamp = 0; 
+let lastTimestamp = 0;
 let currentGesture = "等待中...";
 let computerGesture = "";
+let gameResult = "";
 let resultLocked = false;
+let cameraStarted = false;
 
 function setup() {
   // 建立全螢幕畫布
@@ -53,17 +55,21 @@ function draw() {
   background('#FF77FF');
 
   // 處理倒數計時邏輯 (每秒執行一次)
-  let elapsed = millis() - lastTimestamp;
-  if (!resultLocked && elapsed > 1000) {
-    gameTimer--;
-    lastTimestamp = millis();
-    if (gameTimer <= 0) {
-      computerGesture = random(["石頭 ✊", "剪刀 ✌️", "布 🖐️"]);
-      resultLocked = true; // 倒數結束，鎖定結果
+  if (cameraStarted && !resultLocked) {
+    let elapsed = millis() - lastTimestamp;
+    if (elapsed > 1000) {
+      gameTimer--;
+      lastTimestamp = millis();
+      if (gameTimer <= 0) {
+        computerGesture = random(["石頭 ✊", "剪刀 ✌️", "布 🖐️"]);
+        resultLocked = true; // 倒數結束，鎖定結果
+        gameResult = judgeWinner(currentGesture, computerGesture);
+      }
     }
   }
 
   if (detections && detections.image) {
+    cameraStarted = true;
     // 1. 解析手勢：只在倒數期間更新 currentGesture
     if (!resultLocked) analyzeGesture();
 
@@ -78,7 +84,7 @@ function draw() {
     scale(-1, 1); // 鏡像處理
     drawingContext.drawImage(detections.image, 0, 0, dw, dh);
     
-    // 3. 繪製骨架 (如果你希望偵測完後骨架也消失，可以加上 if(!resultLocked) 判斷)
+    // 3. 繪製骨架 (只在倒數期間顯示)
     if (detections.multiHandLandmarks && !resultLocked) {
       for (const landmarks of detections.multiHandLandmarks) {
         stroke(0, 255, 0); 
@@ -107,7 +113,7 @@ function draw() {
     text("正在初始化攝影機...", width / 2, height / 2);
   }
 
-  // 3. 顯示遊戲 UI (移到最外層，確保隨時可見)
+  // 4. 顯示遊戲 UI
   drawUI();
 }
 
@@ -173,6 +179,8 @@ function mousePressed() {
   if (resultLocked) {
     gameTimer = 3;
     resultLocked = false;
+    gameResult = "";
+    computerGesture = "";
     lastTimestamp = millis();
   }
 }
