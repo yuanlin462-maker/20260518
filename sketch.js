@@ -7,6 +7,8 @@ let gameResult = "";
 let resultLocked = false;
 let cameraStarted = false;
 let gameStarted = false;
+let playerScore = 0;
+let computerScore = 0;
 
 function setup() {
   // 建立全螢幕畫布
@@ -49,6 +51,7 @@ function windowResized() {
 
 function onResults(results) {
   detections = results;
+  cameraStarted = true; // 只要收到第一幀結果，就代表攝影機與模型已就緒
 }
 
 function draw() {
@@ -57,12 +60,16 @@ function draw() {
 
   // 1. 若遊戲尚未開始，只顯示開始按鈕文字，不執行後續邏輯
   if (!gameStarted) {
-    fill(255);
+    fill(0); // 改用黑色在粉紅背景上較清楚
     noStroke();
     textAlign(CENTER, CENTER);
     textSize(60);
-    text("按一下開始遊戲", width / 2, height / 2);
-    return; // 跳出 draw，不顯示擷取畫面
+    if (cameraStarted) {
+      text("按一下開始遊戲", width / 2, height / 2);
+    } else {
+      text("正在初始化攝影機...", width / 2, height / 2);
+    }
+    return; 
   }
 
   // 處理倒數計時邏輯 (每秒執行一次)
@@ -152,21 +159,46 @@ function analyzeGesture() {
   }
 }
 
+// 判斷勝負的函式
+function judgeWinner(player, computer) {
+  if (player === "未偵測到手") return "偵測失敗";
+  if (player === computer) return "平手";
+  if (
+    (player === "石頭 ✊" && computer === "剪刀 ✌️") ||
+    (player === "剪刀 ✌️" && computer === "布 🖐️") ||
+    (player === "布 🖐️" && computer === "石頭 ✊")
+  ) {
+    return "勝利!";
+  } else {
+    return "好可惜";
+  }
+}
+
 // 繪製使用者介面
 function drawUI() {
   push();
   textAlign(CENTER, CENTER);
   
-  // 右上角顯示：倒數時顯示「準備中」，結束後顯示「最終結果」
+  // 在左上角顯示計分板
+  push();
+  textAlign(LEFT, TOP);
+  fill(0);
+  textSize(24);
+  text(`玩家: ${playerScore}  |  電腦: ${computerScore}`, 30, 30);
+  pop();
+
+  // 右上角顯示結果
   push();
   textAlign(RIGHT, TOP);
   fill(0);
-  textSize(30);
+  textSize(24);
   if (resultLocked) {
     text("您出的是: " + currentGesture, width - 40, 40);
     text("電腦出的是: " + computerGesture, width - 40, 80);
+    fill(255, 0, 0); // 勝負結果用紅色
+    text(gameResult, width - 40, 120);
   } else {
-    text("您出的是: 準備中...", width - 40, 40);
+    text("準備中...", width - 40, 40);
   }
   pop();
 
