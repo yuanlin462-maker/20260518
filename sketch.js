@@ -2,6 +2,7 @@ let detections;
 let gameTimer = 3;
 let lastTimestamp = 0; 
 let currentGesture = "等待中...";
+let computerGesture = "";
 let resultLocked = false;
 
 function setup() {
@@ -57,6 +58,7 @@ function draw() {
     gameTimer--;
     lastTimestamp = millis();
     if (gameTimer <= 0) {
+      computerGesture = random(["石頭 ✊", "剪刀 ✌️", "布 🖐️"]);
       resultLocked = true; // 倒數結束，鎖定結果
     }
   }
@@ -141,17 +143,23 @@ function drawUI() {
   fill(0);
   textSize(30);
   if (resultLocked) {
-    text("您出的是: " + currentGesture, width - 30, 30);
+    text("您出的是: " + currentGesture, width - 40, 40);
+    text("電腦出的是: " + computerGesture, width - 40, 80);
   } else {
-    text("您出的是: 準備中...", width - 30, 30);
+    text("您出的是: 準備中...", width - 40, 40);
   }
   pop();
 
   // 畫面中央的倒數與提示
   if (!resultLocked) {
     fill(255);
-    textSize(150);
-    text(gameTimer > 0 ? gameTimer : "", width / 2, height / 2);
+    textSize(180);
+    let timerText = "";
+    if (gameTimer === 3) timerText = "剪刀✌";
+    else if (gameTimer === 2) timerText = "石頭✊";
+    else if (gameTimer === 1) timerText = "布!🖐";
+    
+    text(timerText, width / 2, height / 2);
   } else {
     fill(255);
     textSize(30);
