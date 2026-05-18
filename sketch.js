@@ -62,7 +62,7 @@ function draw() {
     textAlign(CENTER, CENTER);
     textSize(60);
     text("按一下開始遊戲", width / 2, height / 2);
-    return; // 跳出 draw，不顯示畫面
+    return; // 跳出 draw，不顯示擷取畫面
   }
 
   // 處理倒數計時邏輯 (每秒執行一次)
@@ -74,8 +74,8 @@ function draw() {
       if (gameTimer <= 0) {
         computerGesture = random(["石頭 ✊", "剪刀 ✌️", "布 🖐️"]);
         resultLocked = true; // 倒數結束，鎖定結果
-        // 只有在攝影機準備好時才判定勝負
-        if (cameraStarted) {
+        // 判定勝負
+        if (detections) {
           gameResult = judgeWinner(currentGesture, computerGesture);
         }
       }
