@@ -58,18 +58,10 @@ function draw() {
   // 設定背景顏色為 #FF77FF (亮粉色)
   background('#FF77FF');
 
-  // 1. 若遊戲尚未開始，只顯示開始按鈕文字，不執行後續邏輯
+  // 1. 遊戲狀態檢查：若還沒開始，顯示啟動畫面
   if (!gameStarted) {
-    fill(0); // 改用黑色在粉紅背景上較清楚
-    noStroke();
-    textAlign(CENTER, CENTER);
-    textSize(60);
-    if (cameraStarted) {
-      text("按一下開始遊戲", width / 2, height / 2);
-    } else {
-      text("正在初始化攝影機...", width / 2, height / 2);
-    }
-    return; 
+    drawStartScreen();
+    return;
   }
 
   // 處理倒數計時邏輯 (每秒執行一次)
@@ -81,9 +73,13 @@ function draw() {
       if (gameTimer <= 0) {
         computerGesture = random(["石頭 ✊", "剪刀 ✌️", "布 🖐️"]);
         resultLocked = true; // 倒數結束，鎖定結果
-        // 判定勝負
-        if (detections) {
-          gameResult = judgeWinner(currentGesture, computerGesture);
+        gameResult = judgeWinner(currentGesture, computerGesture);
+        
+        // 2. 只有在勝負判定出來後，才更新計分板
+        if (gameResult === "勝利!") {
+          playerScore++;
+        } else if (gameResult === "好可惜") {
+          computerScore++;
         }
       }
     }
@@ -203,9 +199,9 @@ function drawUI() {
   pop();
 
   // 畫面中央的倒數與提示
-  if (!resultLocked) {
+  if (gameStarted && !resultLocked) {
     fill(255);
-    textSize(180);
+    textSize(150);
     let timerText = "";
     if (gameTimer === 3) timerText = "剪刀✌";
     else if (gameTimer === 2) timerText = "石頭✊";
@@ -222,7 +218,7 @@ function drawUI() {
 
 // 點擊畫面重置遊戲
 function mousePressed() {
-  if (!gameStarted && cameraStarted) {
+  if (!gameStarted) {
     gameStarted = true;
     gameTimer = 3;
     lastTimestamp = millis();
